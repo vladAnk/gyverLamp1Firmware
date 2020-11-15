@@ -1,7 +1,5 @@
 // CHSV - Representation of an HSV pixel (hue, saturation, value (aka brightness)).
-//https://github.com/FastLED/FastLED/wiki/Pixel-reference
 
-//#define TRACK_STEP 50
 #define TRACK_STEP 5
 
 byte isToSaturateLed[NUM_LEDS]; //0-ничего не делать; 1-ярче;  2-темнее.
@@ -9,18 +7,8 @@ byte isToSaturateLed[NUM_LEDS]; //0-ничего не делать; 1-ярче; 
 #define SA_DO_NOTHING_VALUE 0
 #define SA_SATURATE_VALUE 1
 #define SA_DESATURATE_VALUE 2
-/* удалить
-// шаг 192 соответствует 192/256 = 75% от начального значения
-#define DESATURATION_STEP 192
-#define DESATURATION_SMALL_STEP 250
-// шаг 268 соответствует 294/256 = 15% от начального значения
-#define SATURATION_STEP 320
-// шаг 268 соответствует 268/256 = 5% от начального значения
-#define SATURATION_SMALL_STEP 268
-*/
-//#define SATURATION_MULTIPLIER 2
-#define SATURATION_MULTIPLIER_1_2 1.2 // с дробными значениями что-то не то. такое ощущение что округляются
-#define SATURATION_MULTIPLIER_1_5 1.5
+//#define SATURATION_MULTIPLIER_1_2 1.2 // с дробными значениями что-то не то. такое ощущение что округляются
+//#define SATURATION_MULTIPLIER_1_5 1.5
 #define SATURATION_MULTIPLIER_2 2
 #define SATURATION_MULTIPLIER_3 3
 #define SATURATION_MULTIPLIER_4 4
@@ -83,7 +71,6 @@ void lighter() {
 }
 
 void lighter2() {
-  //FastLED.clear();
   if (direction) {
     leds[position] = CHSV(oppositeRandomByte, 255, 80);
     position++;
@@ -118,7 +105,6 @@ void lightBugs() {
       speed[i] += random(-3, 3);
     }
   }
-  //FastLED.clear();
   fade();
   for (int i = 0; i < BUGS_AMOUNT; i++) {
     speed[i] += random(-3, 3);
@@ -147,7 +133,6 @@ void lightBugs3() {
       speed[i] += random(-1, 2);
     }
   }
-  //fillAll(CHSV(randomByte, 255, 30));
   for (int i = 0; i < BUGS_AMOUNT; i++) {
     speed[i] += random(-1, 2);
     if (speed[i] == 0) speed[i] += (-1, 2);
@@ -191,8 +176,6 @@ void rainbowLong() {
 
 // ****************************** КАПЛИ ******************************  
 // время от времени создается новая цветная точка, и заливает градиентно с учетом соседних цветов все вокруг.
-//https://github.com/FastLED/FastLED/wiki/Pixel-reference
-//http://fastled.io/docs/3.1/group___colorutils.html#ga3144bb2bb66aeed33e20f4fdd6cc1a98
 byte my_randomLed;// Если нужна лента длиной более 255 диодов, увеличь тип данных
 byte my_deltaColor = 1;
 byte my_currentColor = 1;
@@ -313,10 +296,6 @@ void sparkles5() {
   sparkles(SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
 }
 
-
-
-
-
 // ****************************** СТАТИЧЕСКИЙ СВЕТ ******************************
 void staticColor(){
 	for (int i = 0; i < NUM_LEDS; i++) {
@@ -332,21 +311,6 @@ void fade() {
     leds[i].fadeToBlackBy(TRACK_STEP);
   }
 }
-/*
-void desaturate(){
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if ((uint32_t)getPixColor(i) == 0) continue;
-    leds[i].nscale8(DESATURATION_STEP);
-  }
-}
-
-void desaturateSlowly(){
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if ((uint32_t)getPixColor(i) == 0) continue;
-    leds[i].nscale8(DESATURATION_SMALL_STEP);
-  }
-}
-*/
 
 void resetSaturationArray(){
   for (int i = 0; i < NUM_LEDS; i++) {

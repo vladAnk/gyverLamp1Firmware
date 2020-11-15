@@ -55,12 +55,12 @@ int tempBrightness;
 byte thisMode;
 
 bool gReverseDirection = false;
-boolean loadingFlag = true;
-boolean autoplay = true;
-boolean powerDirection = true;
-boolean powerActive = false;
-boolean powerState = true;
-boolean whiteMode = false;
+boolean loadingFlag = true; // этот флаг означает что режим изменился и нужно инициализировать жуков в lightBugs()
+boolean autoplay = true; // автоматическая смена режимов по таймеру
+boolean powerDirection = true; // направление изменения яркости (при зажатой кнопке)
+boolean powerActive = false;  //  изменение яркости в процессе (зажата кнопка и яркость еще не достигла макс/мин значения; либо лампа включена/выключена кнопкой, и при этом яркость еще не достигла целевого значения brightness)
+boolean powerState = true;  // состояние питания (true - включено, false - отключено (управляется кнопкой))
+boolean whiteMode = false;  // включен режим ровного белого света
 boolean brightDirection = true;
 boolean wasStep = false;
 
@@ -109,18 +109,8 @@ void setStaticPaletteColors(byte startColor, byte deltaColor){
 	}
 }
 
-
+//Этот метод запускается ардуинкой 1 раз при подаче питания на нее 
 void setup() {
-//  //Делаем чтобы при каждом запуске программы генератор случайных чисел начинался с разных чисел
-//  unsigned long seed = 0;
-//// 16 раз
-//  for (int i = 0; i < 16; i++) {
-//    seed *= 4;
-//    seed += analogRead(A0) & 3;
-//  }
-
-
-
   Serial.begin(9600);
   FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
   if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT / NUM_STRIPS);
@@ -134,34 +124,43 @@ void setup() {
   gPal = HeatColors_p;
 }
 
+//////////////////////////
+//     VVV LOOP VVV     //
+//////////////////////////
+//Этот метод крутится ардуинкой по кругу
 void loop() {
+
+  //КНОПКА - СЛУШАЕМ ЕЕ
   touch.tick();
+
+  //КНОПКА - ПО ЧИСЛУ ЕЕ НАЖАТИЙ ВЫБИРАЕМ ДЕЙСТВИЕ
   if (touch.hasClicks()) {
     byte clicks = touch.getClicks();
     switch (clicks) {
-      case 1: if (!whiteMode && !powerActive) {
-          resetSaturationArray();
+      case 1: //СЛЕДУЮЩИЙ РЕЖИМ
+        if (!whiteMode && !powerActive) { //смена режимов отключена если находимся в режиме белого света либо если находимся в процессе выключения питания.
+          //видимо это нужно чтобы во время регулирования яркости с помощью кнопки не переключались режимы.
           nextMode();
         }
         break;
-      case 2:
+      case 2: //ВКЛ/ВЫКЛ ЛАМПУ
         powerDirection = !powerDirection;
         powerActive = true;
         tempBrightness = brightness * !powerDirection;
         break;
-      case 3: if (!powerActive) {
-          if (!whiteMode && !powerActive) autoplay = !autoplay;
-        }
-		break;
-	  case 4: if (!powerActive) {
-          whiteMode = !whiteMode;
-          if (whiteMode) {
-            effectTimer.stop();
-            fillAll(CRGB::White);
-            FastLED.show();
-          } else {
-            effectTimer.start();
-          }
+      case 3: //ВКЛ/ВЫКЛ АВТОСМЕНУ РЕЖИМОВ
+         if (!whiteMode && !powerActive) autoplay = !autoplay; //автосмена режимов отключена если находимся в режиме белого света либо если находимся в процессе выключения питания.
+		 break;
+	  case 4: //ВКЛ/ВЫКЛ РЕЖИМ БЕЛОГО СВЕТА
+	     if (!powerActive) { //вход/выход в режим белого света игнорируется если находимся в процессе изменения яркости.
+              whiteMode = !whiteMode;
+              if (whiteMode) {
+                effectTimer.stop(); // перестаем общаться с лентой и перебирать режимы
+                fillAll(CRGB::White);
+                FastLED.show();
+              } else {
+                effectTimer.start(); // возобновляем общение с лентой
+              }
         }
         break;
       default:
@@ -169,6 +168,7 @@ void loop() {
     }
   }
 
+  ////КНОПКА - НАСТРОЙКА ЯРКОСТИ ПО ДАННЫМ С КНОПКИ
   if (touch.isStep()) {
     if (!powerActive) {
       wasStep = true;
@@ -183,6 +183,7 @@ void loop() {
     }
   }
 
+  //КНОПКА - ОБРАБАТЫВАЕМ СОБЫТИЕ ОТЖАТИЯ КНОПКИ
   if (touch.isRelease()) {
     if (wasStep) {
       wasStep = false;
@@ -190,43 +191,46 @@ void loop() {
     }
   }
 
+  //СВЕТОДИОДНАЯ ЛЕНТА - ОБЩАЕМСЯ С НЕЙ
   if (effectTimer.isReady() && powerState) {
     switch (thisMode) {
-      case 0: lighter(); 		break;
-	  case 1: if(my_baseColor==0){initRaindrops();};  raindrops2();  	break;
-    case 2: lighter2();     break;
-    case 3: if(my_baseColor==0){initRaindrops();}; raindrops();    break;
+      case 0: lighter(); 		break; //начальный режим с малым током (1 активный диод)
+	  case 1: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
+      case 2: lighter2();       break;
+      case 3: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
       case 4: rainbowLong(); 	break; //офигенный
       case 5: rainbow(); 		break; //офигенный
-	  case 6: sparkles6();  	break; // НЕТ ДВИЖЕНИЯ, ТУСКЛО
+	  case 6: sparkles6();  	break; //норм
 	  case 7: sparkles7();  	break; //норм
 	  case 8: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
-	  case 9: sparkles3();  	break; // НЕТ ДВИЖЕНИЯ, ТУСКЛО
-	  case 10: sparkles5();  	break; // НЕТ ДВИЖЕНИЯ, ТУСКЛО
+	  case 9: sparkles3();  	break; // норм
+	  case 10: sparkles5();  	break; // норм
       case 11: lightBugs(); 	break; //офигенный
-      case 12: lightBugs3(); 	break;//норм,но мигает
+      case 12: lightBugs3(); 	break; //норм,но мигает
       case 13: colors(); 		break;
-	  //case 13: staticColorBrightness = 180; setStaticPaletteColors(0,2);  staticColor(); break;//красный
     }
     FastLED.show();
   }
-
-  if (autoplayTimer.isReady() && autoplay) {    // таймер смены режима
+  
+  // таймер смены режима
+  if (autoplayTimer.isReady() && autoplay) {    
     nextMode();
   }
 
+  //плавное включение/выключение лампы за счет управления яркостью
   brightnessTick();
 }
+//////////////////////////
+//     ^^^ LOOP ^^^     //
+//////////////////////////
 
 void nextMode() {
   thisMode++;
   if (thisMode >= MODES_AMOUNT) thisMode = 0;
-  
   loadingFlag = true;
+  resetSaturationArray();
   randomByte = random(0, 255);
   oppositeRandomByte = calculateContrastHue(randomByte);
-  //rainbowBrightness = random(100,255); 
-  //deltaColor = random(20,90);
   FastLED.clear();
 }
 
@@ -235,7 +239,7 @@ void brightnessTick() {
     if (brightTimer.isReady()) {
       if (powerDirection) {
         powerState = true;
-        tempBrightness += 10;
+        tempBrightness += 5;
         if (tempBrightness > brightness) {
           tempBrightness = brightness;
           powerActive = false;
@@ -243,7 +247,7 @@ void brightnessTick() {
         FastLED.setBrightness(tempBrightness);
         FastLED.show();
       } else {
-        tempBrightness -= 10;
+        tempBrightness -= 5;
         if (tempBrightness < 0) {
           tempBrightness = 0;
           powerActive = false;
