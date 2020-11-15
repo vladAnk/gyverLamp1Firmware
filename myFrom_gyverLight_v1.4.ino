@@ -36,7 +36,7 @@
 #define BRIGHTNESS 250      // начальная яркость
 
 // ************************** ДЛЯ РАЗРАБОТЧИКОВ ***********************
-#define MODES_AMOUNT 14
+#define MODES_AMOUNT 16
 
 #include "GyverButton.h"
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -144,9 +144,11 @@ void loop() {
         }
         break;
       case 2: //ВКЛ/ВЫКЛ ЛАМПУ
-        powerDirection = !powerDirection;
-        powerActive = true;
-        tempBrightness = brightness * !powerDirection;
+        if(!powerActive){
+           powerDirection = !powerDirection;
+           powerActive = true;
+           tempBrightness = brightness * !powerDirection;
+        }
         break;
       case 3: //ВКЛ/ВЫКЛ АВТОСМЕНУ РЕЖИМОВ
          if (!whiteMode && !powerActive) autoplay = !autoplay; //автосмена режимов отключена если находимся в режиме белого света либо если находимся в процессе выключения питания.
@@ -196,18 +198,20 @@ void loop() {
     switch (thisMode) {
       case 0: lighter(); 		break; //начальный режим с малым током (1 активный диод)
 	  case 1: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
-      case 2: lighter2();       break;
-      case 3: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
-      case 4: rainbowLong(); 	break; //офигенный
-      case 5: rainbow(); 		break; //офигенный
-	  case 6: sparkles6();  	break; //норм
-	  case 7: sparkles7();  	break; //норм
-	  case 8: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
-	  case 9: sparkles3();  	break; // норм
-	  case 10: sparkles5();  	break; // норм
-      case 11: lightBugs(); 	break; //офигенный
-      case 12: lightBugs3(); 	break; //норм,но мигает
-      case 13: colors(); 		break;
+    case 2: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
+      case 3: lighter2();       break;
+      case 4: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
+      case 5: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
+      case 6: rainbowLong(); 	break; //офигенный
+      case 7: rainbow(); 		break; //офигенный
+	  case 8: sparkles6();  	break; //норм
+	  case 9: sparkles7();  	break; //норм
+	  case 10: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
+	  case 11: sparkles3();  	break; // норм
+	  case 12: sparkles5();  	break; // норм
+      case 13: lightBugs(); 	break; //офигенный
+      case 14: lightBugs3(); 	break; //норм,но мигает
+      case 15: colors(); 		break;
     }
     FastLED.show();
   }
@@ -231,7 +235,7 @@ void nextMode() {
   resetSaturationArray();
   randomByte = random(0, 255);
   oppositeRandomByte = calculateContrastHue(randomByte);
-  FastLED.clear();
+  //FastLED.clear();
 }
 
 void brightnessTick() {
