@@ -36,7 +36,7 @@
 #define BRIGHTNESS 250      // начальная яркость
 
 // ************************** ДЛЯ РАЗРАБОТЧИКОВ ***********************
-#define MODES_AMOUNT 16
+#define MODES_AMOUNT 6
 
 #include "GyverButton.h"
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -56,7 +56,7 @@ byte thisMode;
 
 bool gReverseDirection = false;
 boolean loadingFlag = true; // этот флаг означает что режим изменился и нужно инициализировать жуков в lightBugs()
-boolean autoplay = true; // автоматическая смена режимов по таймеру
+boolean autoplay = false; // автоматическая смена режимов по таймеру
 boolean powerDirection = true; // направление изменения яркости (при зажатой кнопке)
 boolean powerActive = false;  //  изменение яркости в процессе (зажата кнопка и яркость еще не достигла макс/мин значения; либо лампа включена/выключена кнопкой, и при этом яркость еще не достигла целевого значения brightness)
 boolean powerState = true;  // состояние питания (true - включено, false - отключено (управляется кнопкой))
@@ -93,14 +93,14 @@ byte maxValue = 0;
 byte rPix;
 byte gPix;
 byte bPix;
-byte getPixBrightness(int thisPixel) { // "Value" in HSV model (hue-saturatuion-value)
+byte getPixBrightness(int thisPixel) {
   maxValue = 0;
   rPix = leds[thisPixel].r;
   gPix = leds[thisPixel].g;
   bPix = leds[thisPixel].b;
   maxValue = max(rPix, gPix);
   maxValue = max(maxValue, bPix);
-  return maxValue;
+  return maxValue;	// "Value" in HSV model (hue-saturatuion-value)
 }
 
 byte staticPaletteColors[NUM_LEDS];
@@ -145,26 +145,36 @@ void loop() {
           nextMode();
         }
         */
+		blink(1);
         nextMode();
         break;
       case 2: //ВКЛ/ВЫКЛ ЛАМПУ
+		blink(2);
         if(!powerActive){
            powerDirection = !powerDirection;
            powerActive = true;
            tempBrightness = brightness * !powerDirection;
+		   longBlink(1);
         }
         break;
       case 3: //ВКЛ/ВЫКЛ АВТОСМЕНУ РЕЖИМОВ
-         if (!whiteMode && !powerActive) autoplay = !autoplay; //автосмена режимов отключена если находимся в режиме белого света либо если находимся в процессе выключения питания.
-		 break;
+        //if (!whiteMode && !powerActive) autoplay = !autoplay;
+		blink(3);
+		if (!whiteMode) {
+			autoplay = !autoplay;
+			longBlink(1);
+		} //автосмена режимов отключена если находимся в режиме белого света либо если находимся в процессе выключения питания.
+		break;
 	  case 4: //ВКЛ/ВЫКЛ РЕЖИМ БЕЛОГО СВЕТА
        /* непонятно почему перестал работать выход из белого режима(вход-норм), но при закомментированном условии все прохоисдит как надо*/
 	     //if (!powerActive) { //вход/выход в режим белого света игнорируется если находимся в процессе изменения яркости.
-         whiteMode = !whiteMode;
+         blink(4);
+		 whiteMode = !whiteMode;
          if (whiteMode) {
             effectTimer.stop(); // перестаем общаться с лентой и перебирать режимы
             fillAll(CRGB::White);
             FastLED.show();
+			longBlink(1);
          } else {
             //FastLED.clear();
             //FastLED.show();
@@ -203,20 +213,29 @@ void loop() {
   //СВЕТОДИОДНАЯ ЛЕНТА - ОБЩАЕМСЯ С НЕЙ
   if (effectTimer.isReady() && powerState) {
     switch (thisMode) {
-      case 0: lighter(); 		break; //начальный режим с малым током (1 активный диод)
-      case 1: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
-      case 2: rainbowLong(); 	break; //офигенный
-      case 3: lighter2();       break;
-	  case 4: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
-      case 5: rainbow(); 		break; //офигенный
-	  case 6: sparkles6();  	break; //норм
-	  case 7: sparkles7();  	break; //норм
-	  case 8: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
-	  case 9: sparkles3();  	break; // норм
-	  case 10: sparkles5();  	break; // норм
-      case 11: lightBugs(); 	break; //офигенный
-      case 12: lightBugs3(); 	break; //норм,но мигает
-      case 13: colors(); 		break;
+      case 0: lighter(); 		  break; //начальный режим с малым током (1 активный диод)
+	  
+      case 1: sparkles6();  	break; //норм
+      case 2: sparkles7();  	break; //норм
+      case 3: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
+      case 4: sparkles3();  	break; // норм
+      case 5: sparkles5();  	break; // норм
+	  
+      //case 1: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
+      //case 2: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
+	 // case 3: lighter2();    break;
+      //case 3: rainbowLong(); 	break; //офигенный
+      //case 4: sparkles6();  	break; //норм
+      //case 5: sparkles7();  	break; //норм
+      //case 6: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
+      //case 7: sparkles3();  	break; // норм
+      //case 8: sparkles5();  	break; // норм
+      //case 9: lightBugs(); 	  break; //офигенный
+      //case 10: lightBugs3(); 	break; //норм,но мигает
+      //case 11: rainbow();     break; //офигенный
+     // case 12: colors(); 		  break;
+      //case 13: lighter2();    break;
+      default: break;
     }
     FastLED.show();
   }
@@ -228,7 +247,7 @@ void loop() {
 
   //плавное включение/выключение лампы за счет управления яркостью
   // похоже что этот метод, а именно powerActive совместно с изменением яркости в методах effects препятствовало смене режимов.
-  brightnessTick();
+  //brightnessTick();
 }
 //////////////////////////
 //     ^^^ LOOP ^^^     //
@@ -243,7 +262,7 @@ void nextMode() {
   oppositeRandomByte = calculateContrastHue(randomByte);
   //FastLED.clear();
 }
-
+/*
 void brightnessTick() {
   if (powerActive) {
     if (brightTimer.isReady()) {
@@ -282,3 +301,4 @@ void brightnessTick() {
     }
   }
 }
+*/

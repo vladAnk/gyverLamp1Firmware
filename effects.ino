@@ -148,7 +148,7 @@ void lightBugs3() {
       speed[i] = -speed[i];
     }
     leds[pos[i]] = bugColors[i];
-    isToSaturateLed[pos[i]] = 1;
+    isToSaturateLed[pos[i]] = SA_SATURATE_VALUE;
     manageSaturationWithArray(SA_DO_NOTHING_VALUE, SA_SATURATE_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_50prc);
   }
 }
@@ -197,7 +197,7 @@ void raindrops() {
 		initRaindrops();
 	}
 
-  my_randomSkip = random(0, NUM_LEDS-1);
+    my_randomSkip = random(0, NUM_LEDS-1);
 	for (int i = 0; i < NUM_LEDS; i++){// подтягиваем каждый пиксель по цвету к целевому
 
     if(i > my_randomSkip){//не доходим до конца, чтобы создать эффект волны (источник волны - нулевой пиксель)
@@ -267,11 +267,13 @@ void raindrops2() {//здесь волна идет не снизу лампы, 
 }
 
 // ****************************** КОНФЕТТИ ******************************
-void sparkles(byte onSaturatedAction, byte onDesaturatedAction, byte saturationMultiplyer, byte desaturationStep){	//SA_SATURATE_VALUE, SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE
-  byte thisNum = random(0, NUM_LEDS);
+byte thisNum = random(1, NUM_LEDS)-1;
+//SA_SATURATE_VALUE, SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE
+void sparkles(byte onSaturatedAction, byte onDesaturatedAction, byte saturationMultiplyer, byte desaturationStep){
+  byte thisNum = random(1, NUM_LEDS)-1;
   if ((thisNum>NUM_LEDS/4) && getPixColor(thisNum) == 0){
-    leds[thisNum] = CHSV(random(0, 255), 255, 30);
-    isToSaturateLed[thisNum] = 1;
+    leds[thisNum] = CHSV((byte)(random(0, 255)), 255, 30);
+    isToSaturateLed[thisNum] = SA_SATURATE_VALUE;
   }
   manageSaturationWithArray(onSaturatedAction, onDesaturatedAction, saturationMultiplyer, desaturationStep);
 }
@@ -281,7 +283,8 @@ void sparkles6() {
 }
 
 void sparkles7() {
-	sparkles(SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
+	//sparkles(SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
+ sparkles(SA_DO_NOTHING_VALUE, SA_SATURATE_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_75prc);
 }
 
 void sparkles8() {
@@ -297,11 +300,13 @@ void sparkles5() {
 }
 
 // ****************************** СТАТИЧЕСКИЙ СВЕТ ******************************
+/*
 void staticColor(){
 	for (int i = 0; i < NUM_LEDS; i++) {
     leds[i] = CHSV(staticPaletteColors[i], 255 , staticColorBrightness);
   }
 }
+*/
 
 // ****************** СЛУЖЕБНЫЕ ФУНКЦИИ *******************
 
@@ -316,4 +321,42 @@ void resetSaturationArray(){
   for (int i = 0; i < NUM_LEDS; i++) {
     isToSaturateLed[i] = 0;
   }
+}
+
+void blink(byte times) {
+	byte r = leds[0].r;
+	byte g = leds[0].g;
+	byte b = leds[0].b;
+	for(int i = 0; i < times; i++){
+		leds[0].setRGB(0, 0, 0); //black
+		FastLED.show();
+		delay(500);			// wait for a half-second
+		leds[0].setRGB(250, 250, 250); //white
+		FastLED.show();
+		delay(500);
+	}
+	leds[0].setRGB(0, 0, 0);
+	FastLED.show();
+	delay(500);
+	leds[0].setRGB(r, g, b);
+	FastLED.show();
+}
+
+void longBlink(byte times) {
+	byte r = leds[0].r;
+	byte g = leds[0].g;
+	byte b = leds[0].b;
+	for(int i = 0; i < times; i++){
+		leds[0].setRGB(0, 0, 0); //black
+		FastLED.show();
+		delay(500);			// wait for a half-second
+		leds[0].setRGB(250, 250, 250); //white
+		FastLED.show();
+		delay(1500);
+	}
+	leds[0].setRGB(0, 0, 0);
+	FastLED.show();
+	delay(500);
+	leds[0].setRGB(r, g, b);
+	FastLED.show();
 }
