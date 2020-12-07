@@ -39,7 +39,7 @@
 #define BRIGHTNESS 250      // начальная яркость
 
 // ************************** ДЛЯ РАЗРАБОТЧИКОВ ***********************
-#define MODES_AMOUNT 15
+#define MODES_AMOUNT 32
 
 #include "GyverButton.h"
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -219,19 +219,44 @@ void loop() {
     switch (thisMode) {
       case 0: lighter(); 		  break; //начальный режим с малым током (1 активный диод)
 	  case 1: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
-	  case 2: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
+	  case 2: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво, но мелькает - нужно починить
 	  case 3: rainbowLong(); 	break; //офигенный
-      case 4: sparkles1();  	break; //мягкий, праздничный, довольно быстрый
-      case 5: sparkles2();  	break; //умеренной скорости, красивый
-      case 6: sparkles4();  	break; //красивый, глубокие цвета
-      case 7: sparkles5();  	break; //всполохи, симпатичный, для освещения не годится, праздничный
-	  case 8: sparkles7();  	break; //яркий, годится для освещения, что-то не то с логикой, т.к. основной рисунок не меняется (удалить)
-	  case 9: sparkles9();  	break; //яркий, годится для освещения, плавная смена цветов
-	  case 10: lighter2();      break;
-      case 11: lightBugs(); 	  break; //офигенный
-      case 12: lightBugs3(); 	break; //норм,но мигает
-      case 13: rainbow();     break; //офигенный
-	  case 14: colors(); 		  break;
+
+	  case 4: sparkles11();  	break; // лава, (*)-мягкий, спокойный, одноцветный, как спокойная волна 
+	  case 5: sparkles12();  	break; //
+	  case 6: sparkles13();  	break; //
+	  case 7: sparkles14();  	break; //
+	  case 8: sparkles15();  	break; //
+	  case 9: sparkles16();  	break; //
+
+	  case 10: sparkles17();  	break; //плавный
+	  case 11: sparkles18();  	break; //супер плавный, топчик
+	 // case 9: sparkles19();  	break; //светлый, почти не меняется. Слишком яркий, бледные грязноватые цвета
+	  case 12: sparkles20();  	break; //светлый, норм цвета хоть и бледноваты, норм
+	  case 13: sparkles21();  	break; //очень яркий, плавный, норм
+	  case 14: sparkles22();  	break; //яркий, более чистые цвета, норм
+	  case 15: sparkles23();  	break; //яркий, приятный сброс яркости цвета
+	  //case 14: sparkles24();  	break; //ничего нового
+
+	  //полное отсутствие мигания и мерцания
+	  case 16: sparkles25();  	break; //топчик. время от времени зажигаются огоньки, насыщенность цвета средняя
+	  case 17: sparkles26();  	break; //еще медленнее, тоже норм
+	  case 18: sparkles27();  	break; //ультра медленная смена цветов, яркий. "спокойная вода на озере"
+	  case 19: sparkles29();  	break; //топчик. приятный сброс света "нырок". цвета средней насыщенности
+	  case 20: sparkles31();  	break; //топчик. средняя скорость смены, в среднем 3 огонька, "ползающиe" огоньки эффект
+
+      case 21: sparkles1();  	break; //мягкий, праздничный, довольно быстрый
+      case 22: sparkles2();  	break; //умеренной скорости, красивый
+      case 23: sparkles4();  	break; //красивый, глубокие цвета
+      case 24: sparkles5();  	break; //всполохи, симпатичный, для освещения не годится, праздничный
+	  case 25: sparkles7();  	break; //яркий, годится для освещения, что-то не то с логикой, т.к. основной рисунок не меняется (удалить)
+	  case 26: sparkles9();  	break; //яркий, годится для освещения, плавная смена цветов
+	  case 27: lighter2();      break;
+      case 28: lightBugs(); 	break; //офигенный
+      case 29: lightBugs3(); 	break; //норм,но мигает
+      case 30: rainbow();       break; //офигенный
+	  case 31: colors(); 		break;
+
       default: break;
     }
     FastLED.show();
