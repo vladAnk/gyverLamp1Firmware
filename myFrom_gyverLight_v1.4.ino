@@ -21,12 +21,15 @@
 */
 /*
   AVE - правки под себя:
-	выброшен белый режим
+    сделано плавное зажигание/гашение огней в методе sparkles
+    сделаны новые пресеты с учетом этого: sparkles1-sparkles10
+    сделан новый режим raindrops: низ лампы горит ровным немного двигающимся огнем
+    добавлено отображение срабатывания кнопки - мигает нижний диод столько раз, сколько нажатий сосчитано; так же миганием отмечено срабатывание автосмены режима(см. методы ...blink).
 */
 
 // ************************** НАСТРОЙКИ ***********************
 #define CURRENT_LIMIT 2000  // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
-#define AUTOPLAY_TIME 60    // время между сменой режимов в секундах
+#define AUTOPLAY_TIME 120    // время между сменой режимов в секундах
 
 #define NUM_LEDS 13         // количсетво светодиодов в одном отрезке ленты
 #define NUM_STRIPS 4        // количество отрезков ленты (в параллели)
@@ -36,7 +39,7 @@
 #define BRIGHTNESS 250      // начальная яркость
 
 // ************************** ДЛЯ РАЗРАБОТЧИКОВ ***********************
-#define MODES_AMOUNT 6
+#define MODES_AMOUNT 15
 
 #include "GyverButton.h"
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -56,7 +59,7 @@ byte thisMode;
 
 bool gReverseDirection = false;
 boolean loadingFlag = true; // этот флаг означает что режим изменился и нужно инициализировать жуков в lightBugs()
-boolean autoplay = false; // автоматическая смена режимов по таймеру
+boolean autoplay = true; // автоматическая смена режимов по таймеру
 boolean powerDirection = true; // направление изменения яркости (при зажатой кнопке)
 boolean powerActive = false;  //  изменение яркости в процессе (зажата кнопка и яркость еще не достигла макс/мин значения; либо лампа включена/выключена кнопкой, и при этом яркость еще не достигла целевого значения brightness)
 boolean powerState = true;  // состояние питания (true - включено, false - отключено (управляется кнопкой))
@@ -103,13 +106,14 @@ byte getPixBrightness(int thisPixel) {
   return maxValue;	// "Value" in HSV model (hue-saturatuion-value)
 }
 
+/*
 byte staticPaletteColors[NUM_LEDS];
 void setStaticPaletteColors(byte startColor, byte deltaColor){
 	for (int i = 0; i < NUM_LEDS; i++){
 		staticPaletteColors[i]=startColor+i*deltaColor;
 	}
 }
-
+*/
 //Этот метод запускается ардуинкой 1 раз при подаче питания на нее 
 void setup() {
   Serial.begin(9600);
@@ -214,34 +218,29 @@ void loop() {
   if (effectTimer.isReady() && powerState) {
     switch (thisMode) {
       case 0: lighter(); 		  break; //начальный режим с малым током (1 активный диод)
-	  
-      case 1: sparkles6();  	break; //норм
-      case 2: sparkles7();  	break; //норм
-      case 3: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
-      case 4: sparkles3();  	break; // норм
-      case 5: sparkles5();  	break; // норм
-	  
-      //case 1: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
-      //case 2: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
-	 // case 3: lighter2();    break;
-      //case 3: rainbowLong(); 	break; //офигенный
-      //case 4: sparkles6();  	break; //норм
-      //case 5: sparkles7();  	break; //норм
-      //case 6: sparkles8();  	break; //норм, ЗАМЕТНО мерцание
-      //case 7: sparkles3();  	break; // норм
-      //case 8: sparkles5();  	break; // норм
-      //case 9: lightBugs(); 	  break; //офигенный
-      //case 10: lightBugs3(); 	break; //норм,но мигает
-      //case 11: rainbow();     break; //офигенный
-     // case 12: colors(); 		  break;
-      //case 13: lighter2();    break;
+	  case 1: if(my_baseColor==0){initRaindrops();}; raindrops();   break; //офигенный - ламповый огонек
+	  case 2: if(my_baseColor==0){initRaindrops();};  raindrops2(); break; //красиво
+	  case 3: rainbowLong(); 	break; //офигенный
+      case 4: sparkles1();  	break; //мягкий, праздничный, довольно быстрый
+      case 5: sparkles2();  	break; //умеренной скорости, красивый
+      case 6: sparkles4();  	break; //красивый, глубокие цвета
+      case 7: sparkles5();  	break; //всполохи, симпатичный, для освещения не годится, праздничный
+	  case 8: sparkles7();  	break; //яркий, годится для освещения, что-то не то с логикой, т.к. основной рисунок не меняется (удалить)
+	  case 9: sparkles9();  	break; //яркий, годится для освещения, плавная смена цветов
+	  case 10: lighter2();      break;
+      case 11: lightBugs(); 	  break; //офигенный
+      case 12: lightBugs3(); 	break; //норм,но мигает
+      case 13: rainbow();     break; //офигенный
+	  case 14: colors(); 		  break;
       default: break;
     }
     FastLED.show();
   }
   
   // таймер смены режима
-  if (autoplayTimer.isReady() && autoplay) {    
+  if (autoplayTimer.isReady() && autoplay) {
+    shortBlink(3);
+	resetSaturationArray();
     nextMode();
   }
 

@@ -8,7 +8,6 @@ byte isToSaturateLed[NUM_LEDS]; //0-ничего не делать; 1-ярче; 
 #define SA_SATURATE_VALUE 1
 #define SA_DESATURATE_VALUE 2
 //#define SATURATION_MULTIPLIER_1_2 1.2 // с дробными значениями что-то не то. такое ощущение что округляются
-//#define SATURATION_MULTIPLIER_1_5 1.5
 #define SATURATION_MULTIPLIER_2 2
 #define SATURATION_MULTIPLIER_3 3
 #define SATURATION_MULTIPLIER_4 4
@@ -31,16 +30,15 @@ void manageSaturationWithArray(byte onSaturatedAction, byte onDesaturatedAction,
     if(isToSaturateLed[i] == SA_SATURATE_VALUE ){
       if (getPixBrightness(i) >= 250) {
         isToSaturateLed[i] = onSaturatedAction;
-        continue;
       } else {
         leds[i]*=saturationMultiplyer;
       }
+	  continue;
     }
 
     if(isToSaturateLed[i] == SA_DESATURATE_VALUE ){
       if ((uint32_t)getPixColor(i) == 0) {
         isToSaturateLed[i] = onDesaturatedAction;
-        continue;
       } else {
         leds[i].nscale8(desaturationStep);
       }
@@ -200,18 +198,18 @@ void raindrops() {
     my_randomSkip = random(0, NUM_LEDS-1);
 	for (int i = 0; i < NUM_LEDS; i++){// подтягиваем каждый пиксель по цвету к целевому
 
-    if(i > my_randomSkip){//не доходим до конца, чтобы создать эффект волны (источник волны - нулевой пиксель)
-      leds[i]--; // уменьшаем каждую составляющую (r,g,b) на 1. Это нужно чтобы в случае рандом скипа не накапливался белый цвет в скипнутых ледах
-      continue;
-    }
-    my_currentBrightness = getPixBrightness[i];//получаем текущие значения цветов леда в переменные rPix, gPix, bPix;
+		if(i > my_randomSkip){//не доходим до конца, чтобы создать эффект волны (источник волны - нулевой пиксель)
+		  leds[i]--; // уменьшаем каждую составляющую (r,g,b) на 1. Это нужно чтобы в случае рандом скипа не накапливался белый цвет в скипнутых ледах
+			continue;
+		}
+		my_currentBrightness = getPixBrightness[i];//получаем текущие значения цветов леда в переменные rPix, gPix, bPix;
 		if(my_currentBrightness>250){
 			continue;
 		}
 
-   //подтягиваем текущее значение цвета леда к целевому
+	   //подтягиваем текущее значение цвета леда к целевому
 		if(rPix < my_rgb.r){
-      leds[i] += CRGB( my_deltaColor, 0, 0);
+			leds[i] += CRGB( my_deltaColor, 0, 0);
 		} else {
 			leds[i] -= CRGB( my_deltaColor, 0, 0);
 		}
@@ -221,9 +219,9 @@ void raindrops() {
 			leds[i] -= CRGB( 0, my_deltaColor, 0);
 		}
 		if(bPix < my_rgb.b){
-      leds[i] += CRGB( 0, 0, my_deltaColor); 
-    } else {
-      leds[i] -= CRGB( 0, 0, my_deltaColor);
+			leds[i] += CRGB( 0, 0, my_deltaColor); 
+		} else {
+			leds[i] -= CRGB( 0, 0, my_deltaColor);
 		}
 	}
 }
@@ -242,7 +240,7 @@ void raindrops2() {//здесь волна идет не снизу лампы, 
       leds[i]--; // уменьшаем каждую составляющую (r,g,b) на 1. Это нужно чтобы в случае рандом скипа не накапливался белый цвет в скипнутых ледах
       continue;
     }
-    my_currentBrightness = getPixBrightness[i];//получаем текущие значения цветов леда в переменные rPix, gPix, bPix;
+    my_currentBrightness = getPixBrightness(i);//получаем текущие значения цветов леда в переменные rPix, gPix, bPix;
     if(my_currentBrightness>250){
       continue;
     }
@@ -250,17 +248,17 @@ void raindrops2() {//здесь волна идет не снизу лампы, 
    //подтягиваем текущее значение цвета леда к целевому
     if(rPix < my_rgb.r){
       leds[i] += CRGB( my_deltaColor, 0, 0);
-    } else {
+    } else if(rPix > my_rgb.r) {
       leds[i] -= CRGB( my_deltaColor, 0, 0);
     }
     if(gPix < my_rgb.g){
       leds[i] += CRGB( 0, my_deltaColor, 0); 
-    } else {
+    } else if(gPix > my_rgb.g) {
       leds[i] -= CRGB( 0, my_deltaColor, 0);
     }
     if(bPix < my_rgb.b){
       leds[i] += CRGB( 0, 0, my_deltaColor); 
-    } else {
+    } else if(bPix < my_rgb.b){
       leds[i] -= CRGB( 0, 0, my_deltaColor);
     }
   }
@@ -269,35 +267,77 @@ void raindrops2() {//здесь волна идет не снизу лампы, 
 // ****************************** КОНФЕТТИ ******************************
 byte thisNum = random(1, NUM_LEDS)-1;
 //SA_SATURATE_VALUE, SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE
-void sparkles(byte onSaturatedAction, byte onDesaturatedAction, byte saturationMultiplyer, byte desaturationStep){
+void sparkles(byte newFireFrequency, byte saturationMultiplyer, byte desaturationStep, byte onSaturatedAction, byte onDesaturatedAction){
   byte thisNum = random(1, NUM_LEDS)-1;
-  if ((thisNum>NUM_LEDS/4) && getPixColor(thisNum) == 0){
-    leds[thisNum] = CHSV((byte)(random(0, 255)), 255, 30);
-    isToSaturateLed[thisNum] = SA_SATURATE_VALUE;
+  if (
+	(random(0, 10)<newFireFrequency)
+	 && (
+		(onSaturatedAction == SA_DESATURATE_VALUE && leds[thisNum].r <10 && leds[thisNum].g <10 && leds[thisNum].b <10)
+		||
+		(onSaturatedAction == SA_DO_NOTHING_VALUE)
+		)
+	){
+		leds[thisNum] = CHSV(random(0, 255), 255, 30);
+		isToSaturateLed[thisNum] = SA_SATURATE_VALUE;
   }
   manageSaturationWithArray(onSaturatedAction, onDesaturatedAction, saturationMultiplyer, desaturationStep);
 }
 
-void sparkles6() {
-  sparkles(SA_DESATURATE_VALUE, SA_SATURATE_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
+/*
+      case 0: lighter(); 		  break; //начальный режим с малым током (1 активный диод)
+	  //case 1: rainbowLong();    break;
+      case 1: sparkles1();  	break; //мягкий, праздничный, довольно быстрый
+      case 2: sparkles2();  	break; //умеренной скорости, красивый
+      //case 3: sparkles3();  	break; //лишний
+      case 4: sparkles4();  	break; //красивый, глубокие цвета
+      case 5: sparkles5();  	break; //всполохи, симпатичный, для освещения не годится, праздничный
+	  //case 6: sparkles6();  	break; //яркий, годится для освещения, есть помигивание
+	  case 7: sparkles7();  	break; //яркий, годится для освещения, что-то не то с логикой, т.к. основной рисунок не меняется (удалить)
+	  //case 8: sparkles8();  	break; //яркий, эпилептически мигает, нужно медленнее
+	  case 9: sparkles9();  	break; //яркий, годится для освещения, плавная смена цветов
+	  // case 10: sparkles10();   break; // мигает
+*/
+void sparkles1() {
+  sparkles(5, SATURATION_MULTIPLIER_2, DESATURATION_STEP_85prc, SA_DESATURATE_VALUE, SA_SATURATE_VALUE);
 }
 
-void sparkles7() {
-	//sparkles(SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
- sparkles(SA_DO_NOTHING_VALUE, SA_SATURATE_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_75prc);
+void sparkles2() {
+ sparkles(5, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc, SA_DESATURATE_VALUE, SA_SATURATE_VALUE);
 }
-
-void sparkles8() {
-	sparkles(SA_DESATURATE_VALUE, SA_SATURATE_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
-}
-
+/*
 void sparkles3() {
-	sparkles(SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_75prc);
+	sparkles(10, SATURATION_MULTIPLIER_2,  DESATURATION_STEP_95prc, SA_DESATURATE_VALUE, SA_SATURATE_VALUE);
+}
+*/
+void sparkles4() {
+	sparkles(1, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc, SA_DESATURATE_VALUE, SA_SATURATE_VALUE);
 }
 
 void sparkles5() {
-  sparkles(SA_DESATURATE_VALUE, SA_DO_NOTHING_VALUE, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc);
+  sparkles(1, SATURATION_MULTIPLIER_2, DESATURATION_STEP_85prc, SA_DESATURATE_VALUE, SA_SATURATE_VALUE);
 }
+/*
+void sparkles6() {
+  sparkles(2, SATURATION_MULTIPLIER_2, DESATURATION_STEP_85prc, SA_DO_NOTHING_VALUE, SA_SATURATE_VALUE);
+}
+*/
+void sparkles7() {
+  sparkles(2, SATURATION_MULTIPLIER_2, DESATURATION_STEP_85prc, SA_DESATURATE_VALUE, SA_DESATURATE_VALUE);
+}
+/*
+void sparkles8() {
+  sparkles(10, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc, SA_DO_NOTHING_VALUE, SA_SATURATE_VALUE);
+}
+*/
+void sparkles9() {
+  sparkles(10, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc, SA_DESATURATE_VALUE, SA_DESATURATE_VALUE);
+}
+/*
+void sparkles10() {
+  sparkles(2, SATURATION_MULTIPLIER_2, DESATURATION_STEP_95prc, SA_DO_NOTHING_VALUE, SA_SATURATE_VALUE);
+}
+*/
+
 
 // ****************************** СТАТИЧЕСКИЙ СВЕТ ******************************
 /*
@@ -319,7 +359,7 @@ void fade() {
 
 void resetSaturationArray(){
   for (int i = 0; i < NUM_LEDS; i++) {
-    isToSaturateLed[i] = 0;
+    isToSaturateLed[i] = SA_DESATURATE_VALUE;   //ошибка была здесь. при вызове Sparcles при множестве горящих ледов и обнуленном isToSaturateLed (SA_DO_NOTHING_VALUE) создавалось тупиковое состояние.
   }
 }
 
@@ -357,6 +397,25 @@ void longBlink(byte times) {
 	leds[0].setRGB(0, 0, 0);
 	FastLED.show();
 	delay(500);
+	leds[0].setRGB(r, g, b);
+	FastLED.show();
+}
+
+void shortBlink(byte times) {
+	byte r = leds[0].r;
+	byte g = leds[0].g;
+	byte b = leds[0].b;
+	for(int i = 0; i < times; i++){
+		leds[0].setRGB(0, 0, 0); //black
+		FastLED.show();
+		delay(100);			// wait for a half-second
+		leds[0].setRGB(250, 250, 250); //white
+		FastLED.show();
+		delay(100);
+	}
+	leds[0].setRGB(0, 0, 0);
+	FastLED.show();
+	delay(100);
 	leds[0].setRGB(r, g, b);
 	FastLED.show();
 }
